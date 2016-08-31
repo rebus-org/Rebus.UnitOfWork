@@ -1,4 +1,4 @@
-# Rebus.TODO
+# Rebus.UnitOfWork
 
 Provides a unit of work helper for [Rebus](https://github.com/rebus-org/Rebus).
 
