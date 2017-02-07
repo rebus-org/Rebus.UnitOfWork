@@ -64,6 +64,7 @@
     <Compile Include="TestUnitOfWorkDoesNotFailWhenNoHandlerIsProvided.cs" />
     <Compile Include="TestUnitOfWork.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="VerifyMessageContextItemsArePassedToHandlers.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rebus.UnitOfWork\Rebus.UnitOfWork.csproj">
