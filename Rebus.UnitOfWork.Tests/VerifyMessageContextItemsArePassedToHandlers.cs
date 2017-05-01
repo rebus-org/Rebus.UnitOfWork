@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Data;
-using System.Runtime.Remoting.Messaging;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
+using Rebus.Exceptions;
 using Rebus.Pipeline;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
@@ -29,7 +28,7 @@ namespace Rebus.UnitOfWork.Tests
 
                     if (uow == null)
                     {
-                        throw new NoNullAllowedException("uow was null");
+                        throw new RebusApplicationException("uow was null");
                     }
 
                     gotMessage.Set();

@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Rebus.Config;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
+using Rebus.UnitOfWork;
+
+// ReSharper disable ArgumentsStyleAnonymousFunction
 #pragma warning disable 1998
 
-namespace Rebus.UnitOfWork
+namespace Rebus.Config
 {
     /// <summary>
     /// Configuration extensions for the unit of work API

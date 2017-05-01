@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Rebus.Exceptions;
 using Rebus.Pipeline;
 
 namespace Rebus.UnitOfWork
@@ -15,11 +16,8 @@ namespace Rebus.UnitOfWork
 
         public UnitOfWorkStep(Func<IMessageContext, Task<TUnitOfWork>> unitOfWorkFactoryMethod, Func<IMessageContext, TUnitOfWork, Task> commitAction, Func<IMessageContext, TUnitOfWork, Task> rollbackAction, Func<IMessageContext, TUnitOfWork, Task> cleanupAction)
         {
-            if (unitOfWorkFactoryMethod == null) throw new ArgumentNullException(nameof(unitOfWorkFactoryMethod));
-            if (commitAction == null) throw new ArgumentNullException(nameof(commitAction));
-
-            _unitOfWorkFactoryMethod = unitOfWorkFactoryMethod;
-            _commitAction = commitAction;
+            _unitOfWorkFactoryMethod = unitOfWorkFactoryMethod ?? throw new ArgumentNullException(nameof(unitOfWorkFactoryMethod));
+            _commitAction = commitAction ?? throw new ArgumentNullException(nameof(commitAction));
 
             _rollbackAction = rollbackAction ?? _noop;
             _cleanupAction = cleanupAction ?? _noop;
@@ -31,7 +29,7 @@ namespace Rebus.UnitOfWork
 
             if (messageContext == null)
             {
-                throw new ApplicationException("Could not find a message context! Something is clearly wrong...");
+                throw new RebusApplicationException("Could not find a message context! Something is clearly wrong...");
             }
 
             var unitOfWork = await _unitOfWorkFactoryMethod(messageContext);
