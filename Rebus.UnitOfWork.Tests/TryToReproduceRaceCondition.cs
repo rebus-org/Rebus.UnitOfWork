@@ -38,10 +38,10 @@ namespace Rebus.UnitOfWork.Tests
                 .Options(o =>
                 {
                     o.EnableUnitOfWork(
-                        context => new TestUnitOfWork(_eventRecorder, context),
-                        (context, uow) => uow.Commit(),
-                        (context, uow) => uow.Rollback(),
-                        (context, uow) => uow.Dispose()
+                        async context => new TestUnitOfWork(_eventRecorder, context),
+                        async (context, uow) => await uow.Commit(),
+                        async (context, uow) => await uow.Rollback(),
+                        async (context, uow) => await uow.Dispose()
                     );
 
                     o.SetNumberOfWorkers(1);
@@ -52,9 +52,7 @@ namespace Rebus.UnitOfWork.Tests
 
         [TestCase(3)]
         [TestCase(30)]
-        [TestCase(300)]
-        [TestCase(3000)]
-        [TestCase(30000)]
+        [TestCase(100)]
         public async Task EverythingHappensInSerialOrder(int numberOfMessages)
         {
             var bus = _activator.Bus;
@@ -62,6 +60,7 @@ namespace Rebus.UnitOfWork.Tests
 
             _activator.Handle<string>(async str =>
             {
+                await Task.Yield();
                 _eventRecorder.Enqueue($"Handling {str}");
                 counter.Decrement();
             });
@@ -71,7 +70,10 @@ namespace Rebus.UnitOfWork.Tests
                 await bus.SendLocal($"{number}", new Dictionary<string, string> { { "number", number.ToString(CultureInfo.InvariantCulture) } });
             }
 
-            counter.WaitForResetEvent(3 + numberOfMessages / 100);
+            counter.WaitForResetEvent(5 + numberOfMessages / 10);
+
+            // allow for handler pipeline to finish processing the last message
+            await Task.Delay(500);
 
             // now check that no events were interleaved at any point in time
             foreach (var batch in _eventRecorder.Batch(4))
@@ -121,11 +123,23 @@ namespace Rebus.UnitOfWork.Tests
                 _eventRecorder.Enqueue($"Create {_messageNumber}");
             }
 
-            public void Commit() => _eventRecorder.Enqueue($"Commit {_messageNumber}");
+            public async Task Commit()
+            {
+                await Task.Yield();
+                _eventRecorder.Enqueue($"Commit {_messageNumber}");
+            }
 
-            public void Rollback() => _eventRecorder.Enqueue($"Rollback {_messageNumber}");
+            public async Task Rollback()
+            {
+                await Task.Yield();
+                _eventRecorder.Enqueue($"Rollback {_messageNumber}");
+            }
 
-            public void Dispose() => _eventRecorder.Enqueue($"Dispose {_messageNumber}");
+            public async Task Dispose()
+            {
+                await Task.Yield();
+                _eventRecorder.Enqueue($"Dispose {_messageNumber}");
+            }
         }
     }
 }
