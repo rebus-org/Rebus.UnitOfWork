@@ -40,7 +40,7 @@ namespace Rebus.UnitOfWork.Tests
                 .Transport(t => t.UseInMemoryTransport(network, UowQueueName))
                 .Options(o =>
                 {
-                    o.EnableUnitOfWork(async c => _events, commitAction: async (c, e) => {});
+                    o.EnableUnitOfWork(async c => _events, commit: async (c, e) => {});
                     o.SimpleRetryStrategy(maxDeliveryAttempts: 1);
                 })
                 .Start();

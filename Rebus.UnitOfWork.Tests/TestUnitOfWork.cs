@@ -43,9 +43,9 @@ namespace Rebus.UnitOfWork.Tests
                 .Options(o =>
                 {
                     o.EnableUnitOfWork(c => _events,
-                        commitAction: (c, e) => RegisterEvent("uow committed"),
-                        rollbackAction: (c, e) => RegisterEvent("uow rolled back"),
-                        cleanupAction: (c, e) => RegisterEvent("uow cleaned up")
+                        commit: (c, e) => RegisterEvent("uow committed"),
+                        rollback: (c, e) => RegisterEvent("uow rolled back"),
+                        dispose: (c, e) => RegisterEvent("uow cleaned up")
                     );
 
                     o.SimpleRetryStrategy(maxDeliveryAttempts: 1);

@@ -18,19 +18,19 @@ namespace Rebus.Config
         /// Wraps the invocation of the incoming pipeline in a step that creates a unit of work, committing/rolling back depending on how the invocation of the pipeline went. The cleanup action is always called.
         /// </summary>
         public static void EnableUnitOfWork<TUnitOfWork>(this OptionsConfigurer configurer,
-            Func<IMessageContext, TUnitOfWork> unitOfWorkFactoryMethod,
-            Action<IMessageContext, TUnitOfWork> commitAction,
-            Action<IMessageContext, TUnitOfWork> rollbackAction = null,
-            Action<IMessageContext, TUnitOfWork> cleanupAction = null)
+            Func<IMessageContext, TUnitOfWork> create,
+            Action<IMessageContext, TUnitOfWork> commit,
+            Action<IMessageContext, TUnitOfWork> rollback = null,
+            Action<IMessageContext, TUnitOfWork> dispose = null)
         {
-            if (unitOfWorkFactoryMethod == null) throw new ArgumentNullException(nameof(unitOfWorkFactoryMethod), "You need to provide a factory method that is capable of creating new units of work");
-            if (commitAction == null) throw new ArgumentNullException(nameof(commitAction), "You need to provide a commit action that commits the current unit of work");
+            if (create == null) throw new ArgumentNullException(nameof(create), "You need to provide a factory method that is capable of creating new units of work");
+            if (commit == null) throw new ArgumentNullException(nameof(commit), "You need to provide a commit action that commits the current unit of work");
 
             configurer.EnableAsyncUnitOfWork(
-                unitOfWorkFactoryMethod: async context => unitOfWorkFactoryMethod(context),
-                commitAction: async (context, unitOfWork) => commitAction(context, unitOfWork),
-                rollbackAction: async (context, unitOfWork) => rollbackAction?.Invoke(context, unitOfWork),
-                cleanupAction: async (context, unitOfWork) => cleanupAction?.Invoke(context, unitOfWork)
+                create: async context => create(context),
+                commit: async (context, unitOfWork) => commit(context, unitOfWork),
+                rollback: async (context, unitOfWork) => rollback?.Invoke(context, unitOfWork),
+                dispose: async (context, unitOfWork) => dispose?.Invoke(context, unitOfWork)
             );
         }
 
@@ -38,18 +38,18 @@ namespace Rebus.Config
         /// Wraps the invocation of the incoming pipeline in a step that creates a unit of work, committing/rolling back depending on how the invocation of the pipeline went. The cleanup action is always called.
         /// </summary>
         public static void EnableAsyncUnitOfWork<TUnitOfWork>(this OptionsConfigurer configurer,
-            Func<IMessageContext, Task<TUnitOfWork>> unitOfWorkFactoryMethod,
-            Func<IMessageContext, TUnitOfWork, Task> commitAction,
-            Func<IMessageContext, TUnitOfWork, Task> rollbackAction = null,
-            Func<IMessageContext, TUnitOfWork, Task> cleanupAction = null)
+            Func<IMessageContext, Task<TUnitOfWork>> create,
+            Func<IMessageContext, TUnitOfWork, Task> commit,
+            Func<IMessageContext, TUnitOfWork, Task> rollback = null,
+            Func<IMessageContext, TUnitOfWork, Task> dispose = null)
         {
-            if (unitOfWorkFactoryMethod == null) throw new ArgumentNullException(nameof(unitOfWorkFactoryMethod), "You need to provide a factory method that is capable of creating new units of work");
-            if (commitAction == null) throw new ArgumentNullException(nameof(commitAction), "You need to provide a commit action that commits the current unit of work");
+            if (create == null) throw new ArgumentNullException(nameof(create), "You need to provide a factory method that is capable of creating new units of work");
+            if (commit == null) throw new ArgumentNullException(nameof(commit), "You need to provide a commit action that commits the current unit of work");
 
             configurer.Decorate<IPipeline>(context =>
             {
                 var pipeline = context.Get<IPipeline>();
-                var unitOfWorkStep = new UnitOfWorkStep<TUnitOfWork>(unitOfWorkFactoryMethod, commitAction, rollbackAction, cleanupAction);
+                var unitOfWorkStep = new UnitOfWorkStep<TUnitOfWork>(create, commit, rollback, dispose);
 
                 return new PipelineStepInjector(pipeline)
                     .OnReceive(unitOfWorkStep, PipelineRelativePosition.Before, typeof(ActivateHandlersStep));

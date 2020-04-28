@@ -28,4 +28,21 @@ Configure.With(activator)
     .Start();
 ```
 
-if you want a unit of work that supports asynchronous
+if you want a unit of work that supports asynchronous creation, completion, etc.
+
+An example could be an Entity Framework database context, `MyDbContext`, which you then manage like this:
+
+```csharp
+Configure.With(activator)
+    .Transport(t => t.Use(...))
+    .Options(o => o.EnableAsyncUnitOfWork(
+        create: async context => new MyDbContext(),
+        commit: async (context, uow) => await uow.SaveChangesAsync(),
+        dispose: async (context, uow) => uow.Dispose()
+    ))
+    .Start();
+```
+
+By the power of C# generics, `uow` passed to the functions above will have the save type as the one returned from the `create` method.
+
+`context` will be the current `IMessageContext`, which is also statically accessible
