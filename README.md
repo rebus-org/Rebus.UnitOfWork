@@ -8,4 +8,24 @@ Provides a unit of work helper for [Rebus](https://github.com/rebus-org/Rebus).
 
 ---
 
+The unit of work helper works with C# generics and lets you represent your unit of work as anything that makes sense to you.
 
+You configure it like this:
+
+```csharp
+Configure.With(activator)
+    .Transport(t => t.Use(...))
+    .Options(o => o.EnableUnitOfWork(...))
+    .Start();
+```
+
+for the synchronous version, or
+
+```csharp
+Configure.With(activator)
+    .Transport(t => t.Use(...))
+    .Options(o => o.EnableAsyncUnitOfWork(...))
+    .Start();
+```
+
+if you want a unit of work that supports asynchronous

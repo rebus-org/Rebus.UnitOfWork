@@ -37,7 +37,7 @@ namespace Rebus.UnitOfWork.Tests
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "whatever"))
                 .Options(o =>
                 {
-                    o.EnableUnitOfWork(
+                    o.EnableAsyncUnitOfWork(
                         async context => new TestUnitOfWork(_eventRecorder, context),
                         async (context, uow) => await uow.Commit(),
                         async (context, uow) => await uow.Rollback(),
@@ -102,9 +102,9 @@ namespace Rebus.UnitOfWork.Tests
 
 {string.Join(Environment.NewLine, batch)}
 ");
-            
+
             var expectedNumber = events.First().Number;
-            
+
             Assert.That(events.All(e => e.Number == expectedNumber), $@"Not all numbers in this batch were equal:
 {string.Join(Environment.NewLine, batch)}
 ");
