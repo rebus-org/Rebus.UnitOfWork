@@ -7,10 +7,10 @@ using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Retry.Simple;
-using Rebus.Tests;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
+// ReSharper disable ArgumentsStyleAnonymousFunction
 #pragma warning disable 1998
 
 namespace Rebus.UnitOfWork.Tests
@@ -45,7 +45,8 @@ namespace Rebus.UnitOfWork.Tests
                     o.EnableUnitOfWork(c => _events,
                         commitAction: (c, e) => RegisterEvent("uow committed"),
                         rollbackAction: (c, e) => RegisterEvent("uow rolled back"),
-                        cleanupAction: (c, e) => RegisterEvent("uow cleaned up"));
+                        cleanupAction: (c, e) => RegisterEvent("uow cleaned up")
+                    );
 
                     o.SimpleRetryStrategy(maxDeliveryAttempts: 1);
 
