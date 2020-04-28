@@ -43,6 +43,41 @@ Configure.With(activator)
     .Start();
 ```
 
-By the power of C# generics, `uow` passed to the functions above will have the save type as the one returned from the `create` method.
+By the power of C# generics, `uow` passed to the `commit` and `dispose` functions above will have the save type as
+the one returned from the `create` method.
 
-`context` will be the current `IMessageContext`, which is also statically accessible
+`context` will be the current `IMessageContext`, which is also statically accessible via `MessageContext.Current`,
+this way enabling injection of your unit of work by using the message context to share it:
+```csharp
+Configure.With(activator)
+    .Transport(t => t.Use(...))
+    .Options(o => o.EnableAsyncUnitOfWork(
+        create: async context =>
+        {
+            var uow = new MyDbContext();
+            context.TransactionContext.Items["current-uow"] = uow;
+            return uow;
+        },
+        commit: async (context, uow) => await uow.SaveChangesAsync(),
+        dispose: async (context, uow) => uow.Dispose()
+    ))
+    .Start();
+```
+and then you can configure your IoC container to be able to inject `MyDbContext` - e.g. with Castle Windsor like this:
+
+```csharp
+container.Register(
+    Component.For<MyDbContext>()
+        .UsingFactoryMethod(k =>
+        {
+            var context = MessageContext.Current
+                ?? throw new InvalidOperationException("Cannot resolve db context outside of Rebus handler, sorry");
+
+            return context.TransactionContext.Items
+                .TryGetValue("current-uow", out var result)
+                ? (MyDbContext)result
+                : throw new ArgumentException("Didn't find db context under 'current-uow' key in current context");
+        })
+        .LifestyleTransient()
+);
+```
