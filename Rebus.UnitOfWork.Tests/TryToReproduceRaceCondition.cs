@@ -23,6 +23,7 @@ namespace Rebus.UnitOfWork.Tests
         readonly ConcurrentQueue<string> _eventRecorder = new ConcurrentQueue<string>();
 
         BuiltinHandlerActivator _activator;
+        IBusStarter _starter;
 
         protected override void SetUp()
         {
@@ -32,7 +33,7 @@ namespace Rebus.UnitOfWork.Tests
 
             Using(_activator);
 
-            Configure.With(_activator)
+            _starter = Configure.With(_activator)
                 .Logging(l => l.Console(LogLevel.Warn))
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "whatever"))
                 .Options(o =>
@@ -47,7 +48,7 @@ namespace Rebus.UnitOfWork.Tests
                     o.SetNumberOfWorkers(1);
                     o.SetMaxParallelism(1);
                 })
-                .Start();
+                .Create();
         }
 
         [TestCase(3)]
@@ -64,7 +65,8 @@ namespace Rebus.UnitOfWork.Tests
                 _eventRecorder.Enqueue($"Handling {str}");
                 counter.Decrement();
             });
-
+            _starter.Start();
+            
             foreach (var number in Enumerable.Range(1, numberOfMessages))
             {
                 await bus.SendLocal($"{number}", new Dictionary<string, string> { { "number", number.ToString(CultureInfo.InvariantCulture) } });

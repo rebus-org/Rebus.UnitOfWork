@@ -63,21 +63,18 @@ Configure.With(activator)
     ))
     .Start();
 ```
-and then you can configure your IoC container to be able to inject `MyDbContext` - e.g. with Castle Windsor like this:
+and then you can configure your IoC container to be able to inject `MyDbContext` - e.g. with Microsoft Extensions Dependency Injection like this:
 
 ```csharp
-container.Register(
-    Component.For<MyDbContext>()
-        .UsingFactoryMethod(k =>
-        {
-            var context = MessageContext.Current
-                ?? throw new InvalidOperationException("Cannot resolve db context outside of Rebus handler, sorry");
+services.AddScoped(p =>
+{
+    var context = p.GetService<IMessageContext>() 
+                    ?? throw new InvalidOperationException("Cannot resolve db context outside of Rebus handler, sorry");
 
-            return context.TransactionContext.Items
-                .TryGetValue("current-uow", out var result)
-                ? (MyDbContext)result
-                : throw new ArgumentException("Didn't find db context under 'current-uow' key in current context");
-        })
-        .LifestyleTransient()
-);
+    return context.TransactionContext.Items.TryGetValue("current-uow", out var result)
+        ? (MyDbContext)result
+        : throw new ArgumentException("Didn't find db context under 'current-uow' key in current context");
+
+});
+
 ```

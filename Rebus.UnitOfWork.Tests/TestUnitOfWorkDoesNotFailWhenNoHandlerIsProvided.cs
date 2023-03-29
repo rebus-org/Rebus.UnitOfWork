@@ -23,6 +23,7 @@ namespace Rebus.UnitOfWork.Tests
         ConcurrentQueue<string> _events;
         BuiltinHandlerActivator _uowActivator;
         ListLoggerFactory _loggerFactory;
+        IBusStarter _uowStarter;
 
         protected override void SetUp()
         {
@@ -35,7 +36,7 @@ namespace Rebus.UnitOfWork.Tests
 
             _loggerFactory = new ListLoggerFactory(outputToConsole:true);
 
-            Configure.With(_uowActivator)
+            _uowStarter = Configure.With(_uowActivator)
                 .Logging(l => l.Use(_loggerFactory))
                 .Transport(t => t.UseInMemoryTransport(network, UowQueueName))
                 .Options(o =>
@@ -43,13 +44,14 @@ namespace Rebus.UnitOfWork.Tests
                     o.EnableUnitOfWork(async c => _events, commit: async (c, e) => {});
                     o.SimpleRetryStrategy(maxDeliveryAttempts: 1);
                 })
-                .Start();
+                .Create();
         }
 
         [Test]
         public async Task DoesNotFailWhenNoAbortOrCleanupHandlerIsAdded()
         {
             _uowActivator.Handle<string>(async str => { });
+            _uowStarter.Start();
 
             _uowActivator.Bus.SendLocal("hej med dig min ven!!").Wait();
 

@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
-using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Retry.Simple;
@@ -24,7 +23,8 @@ namespace Rebus.UnitOfWork.Tests
         ConcurrentQueue<string> _events;
         BuiltinHandlerActivator _uowActivator;
         BuiltinHandlerActivator _otherActivator;
-        IBus _uowBus;
+        IBusStarter _otherStarter;
+        IBusStarter _uowStarter;
 
         protected override void SetUp()
         {
@@ -37,7 +37,7 @@ namespace Rebus.UnitOfWork.Tests
             Using(_uowActivator);
             Using(_otherActivator);
 
-            _uowBus = Configure.With(_uowActivator)
+            _uowStarter = Configure.With(_uowActivator)
                 .Logging(l => l.Console(LogLevel.Warn))
                 .Transport(t => t.UseInMemoryTransport(network, UowQueueName))
                 .Options(o =>
@@ -52,12 +52,12 @@ namespace Rebus.UnitOfWork.Tests
 
                     //o.LogPipeline(true);
                 })
-                .Start();
+                .Create();
 
-            Configure.With(_otherActivator)
+            _otherStarter = Configure.With(_otherActivator)
                 .Logging(l => l.Console(LogLevel.Warn))
                 .Transport(t => t.UseInMemoryTransport(network, OtherQueueName))
-                .Start();
+                .Create();
         }
 
         [Test]
@@ -79,9 +79,12 @@ namespace Rebus.UnitOfWork.Tests
                 counter.Decrement();
             });
 
+            var uowBus = _uowStarter.Start();
+            _otherStarter.Start();
+
             RegisterEvent("message sent");
 
-            await _uowBus.SendLocal("hej med dig min veeeeeen!");
+            await uowBus.SendLocal("hej med dig min veeeeeen!");
 
             counter.WaitForResetEvent();
 
@@ -118,9 +121,12 @@ namespace Rebus.UnitOfWork.Tests
                 throw new InvalidOperationException("bummer, dude!");
             });
 
+            var uowBus = _uowStarter.Start();
+            _otherStarter.Start();
+
             RegisterEvent("message sent");
 
-            await _uowBus.SendLocal("hej med dig min veeeeeen!");
+            await uowBus.SendLocal("hej med dig min veeeeeen!");
 
             await Task.Delay(2000);
 
