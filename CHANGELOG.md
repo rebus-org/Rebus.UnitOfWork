@@ -19,5 +19,5 @@
 ## 6.0.0
 * Update to Rebus 6
 
-## 7.0.0
+## 7.0.1
 * Update to Rebus 8
