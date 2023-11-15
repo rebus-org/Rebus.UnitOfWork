@@ -42,7 +42,7 @@ namespace Rebus.UnitOfWork.Tests
                 .Options(o =>
                 {
                     o.EnableUnitOfWork(async c => _events, commit: async (c, e) => {});
-                    o.SimpleRetryStrategy(maxDeliveryAttempts: 1);
+                    o.RetryStrategy(maxDeliveryAttempts: 1);
                 })
                 .Create();
         }

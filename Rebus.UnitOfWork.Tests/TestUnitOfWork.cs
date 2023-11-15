@@ -48,7 +48,7 @@ namespace Rebus.UnitOfWork.Tests
                         dispose: (c, e) => RegisterEvent("uow cleaned up")
                     );
 
-                    o.SimpleRetryStrategy(maxDeliveryAttempts: 1);
+                    o.RetryStrategy(maxDeliveryAttempts: 1);
 
                     //o.LogPipeline(true);
                 })
