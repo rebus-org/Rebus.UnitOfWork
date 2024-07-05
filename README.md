@@ -43,7 +43,7 @@ Configure.With(activator)
     .Start();
 ```
 
-By the power of C# generics, `uow` passed to the `commit` and `dispose` functions above will have the save type as
+By the power of C# generics, `uow` passed to the `commit` and `dispose` functions above will have the same type as
 the one returned from the `create` method.
 
 `context` will be the current `IMessageContext`, which is also statically accessible via `MessageContext.Current`,
