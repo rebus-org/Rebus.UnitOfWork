@@ -9,7 +9,7 @@
 		<Copyright>Copyright Rebus FM ApS 2012</Copyright>
 		<PackageTags>rebus autofac ioc dependency-injection</PackageTags>
 		<PackageDescription>Provides a unit-of-work plugin for Rebus</PackageDescription>
-		<RepositoryUrl>https://github.com/rebus-org/Rebus</RepositoryUrl>
+		<RepositoryUrl>https://github.com/rebus-org/Rebus.UnitOfWork</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 		<PackageIcon>little_rebusbus2_copy-500x500.png</PackageIcon>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
